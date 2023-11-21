@@ -21,7 +21,7 @@
                 let storyBarWrap = container.querySelector(mainBarContainerClass);
                 let storyContent = container.querySelectorAll(`${storyContentContainerClass} > ${storyPanelClass}`);
 
-                mainStoryContainerClass.querySelector(storyPanelClass).remove();
+                document.querySelector(storyPanelClass).remove();
                 
                 storyContent.forEach((content, index) => {
                     storyWrap.appendChild(content);
