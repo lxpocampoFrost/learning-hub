@@ -188,3 +188,149 @@
     createStoryPanels();
 
 })();
+
+//Quiz
+$(function() {
+    console.log( "quiz ready!" );
+    
+     $($('.question-item').get().reverse()).each(function(index) {
+				$(this).attr('data-order', index + 1);
+        let questionNumber = $(this).children('.question-header').find('.question-number .question-number-stats');
+        questionNumber.text($(this).attr('data-order'));
+    });
+    
+    let totalQuizItems =  $('.question-list').children().length;
+    let resultContent = $('.result-content');
+    let quizStatus = $('.quiz-result');
+
+    let correctAnswers = 0; 
+    let answeredQuestions;
+   
+
+    $('.option').on('click', function () {
+        let $this = $(this);
+        let selectedAnswer = $this.attr('data-option');
+        let status = $this.parent().siblings('.w-embed').find('.status').text();
+        $this.addClass('selected');
+        $this.parent().addClass('disabled');   
+        $this.siblings().css('opacity', 0.6);
+        $this.parent().siblings(".next-question-block").css("display", "flex");
+        $this.parent().parent().addClass('answered');
+       
+        if (status === selectedAnswer) {
+         	$this.find('.options-wrap').children('.option-letter').hide();
+          $this.find('.options-wrap').children('.option-correct').show();
+
+          correctAnswers++;
+          
+        } else {
+            $this.find('.options-wrap').children('.option-letter').hide();
+            $this.find('.options-wrap').children('.option-incorrect').show();
+
+            $(this).siblings('.option').each(function () {
+                if ($(this).attr('data-option') === status) {
+                    $(this).css('opacity', 1);
+                    $(this).find('.options-wrap').children('.option-letter').hide();
+                    $(this).find('.options-wrap').children('.option-correct').show();
+            
+                } 
+            });	
+        }
+
+        updateAnswerCount();
+
+         if (answeredQuestions === totalQuizItems) {
+            $('.next-question').text('Finish');
+            setTimeout(() => {
+           const quizResult = computePercentage(correctAnswers, totalQuizItems);
+           console.log('result', quizResult);
+
+           $('.totalscore').text(correctAnswers);
+           $('.totalitems').text(totalQuizItems);
+
+            if(quizResult >= 65){
+                quizStatus.text('Passed');
+                $('.quiz-result-img.guru').show();
+                resultContent.text('You have a strong understanding of financial concepts. Keep honing your skills, and you might become a financial guru in no time!')
+            } else {
+                 quizStatus.text('Failed');
+                 $('.quiz-result-img.novice').show();
+                resultContent.text(`You're just starting your financial journey. Consider 
+                checking the following article to boost your knowledge.`)
+            }
+            }, 300);
+         }
+    });
+    
+    $('.next-question-block').on('click',function() {   
+      $('.question_list').delay(0).animate({
+        translateX: -50+'em',
+      },{ duration: 300, queue: false },'linear');
+    });
+
+     function updateAnswerCount() {
+        answeredQuestions = $(".answered").length;
+        let progressWidth = (answeredQuestions / totalQuizItems) * 100;
+        $(".quiz-progress").css("width", progressWidth + "%");
+ 
+    }
+    
+    updateAnswerCount()
+
+    function computePercentage(score, totalItems) {
+        return (score / totalItems) * 100;
+    }
+
+});
+
+let allInvisibleItems = document.querySelectorAll('.w-condition-invisible');
+let allEmptyItems = document.querySelectorAll('.series-content-name.w-dyn-bind-empty');
+let allItemTitles = document.querySelectorAll('.series-content-name');
+
+let contentTitles = [];
+
+allEmptyItems.forEach((item) => {
+    item.remove();
+})
+
+allInvisibleItems.forEach((item) => {
+    item.remove();
+})
+
+allItemTitles.forEach((element) => {
+    console.log(element.textContent);
+
+    if(!contentTitles.includes(element.textContent) && !element.classList.contains("w-dyn-bind-empty")) {
+        contentTitles.push(element.textContent);
+    }
+})
+
+//Change nav items to right names
+let seriesNavItem = document.querySelector('.series-nav-item').cloneNode(true);
+let seriesNav = document.querySelector('.series-nav');
+
+document.querySelector('.series-nav-item').remove();
+
+contentTitles.map((name, index) => {
+	let newItem = seriesNavItem.cloneNode(true);
+    
+    newItem.querySelector('.series-nav-item-name').textContent = name;
+    console.log(newItem);
+    
+    seriesNav.appendChild(newItem);
+})
+
+let seriesContentItems = document.querySelectorAll('.series-content-list-item');
+
+function getFirstWord(str) {
+    let words = str.split(' ');
+    return words[0];
+}
+
+seriesContentItems.forEach((item, index) => {
+    item.setAttribute('id',`${getFirstWord(contentTitles[index])}`);
+})
+
+document.querySelectorAll('.series-nav-item').forEach((item, index) => {
+    item.setAttribute('href', `#${getFirstWord(contentTitles[index])}`);
+})
