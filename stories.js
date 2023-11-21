@@ -8,32 +8,28 @@
     const mainStoryContainerClass = '.story-wrap';
     const storyContentContainerClass = '.stories-content';
     const storyPanelClass = '.story';
-	
-  	let storiesCollection = [];
-  
+
     function createStoryPanels() {
         const storyMainContainer = document.querySelectorAll(mainContainerClass);
         const progressBar = storyMainContainer[0].querySelector(barClass).cloneNode(true);
 
+        let storiesCollection = [];
+        
         storyMainContainer.forEach((container, index) => {
             if(storiesCollection.includes(container) == false) {
                 let storyWrap = container.querySelector(mainStoryContainerClass);
                 let storyBarWrap = container.querySelector(mainBarContainerClass);
                 let storyContent = container.querySelectorAll(`${storyContentContainerClass} > ${storyPanelClass}`);
+
+                mainStoryContainerClass.querySelector(storyPanelClass).remove();
                 
                 storyContent.forEach((content, index) => {
                     storyWrap.appendChild(content);
                     storyBarWrap.appendChild(progressBar.cloneNode(true));
                 });
-								
-                if(container.querySelector(storyContentContainerClass)) {
-                	 container.querySelector(storyContentContainerClass).remove();
-                }
-           			
-                if(container.querySelector(barClass)) {
-               		container.querySelector(barClass).remove();
-               	}
-                
+
+                container.querySelector(storyContentContainerClass).remove();
+                container.querySelector(barClass).remove();
 
                 storiesCollection.push(container);
             }
@@ -46,8 +42,8 @@
 
     function animateStories(container) {
         let options = {
-            root: document.body,
-            threshold: 1,
+            root: null,
+            threshold: 0.8,
         }
 
         const progresBarMove = [
@@ -155,7 +151,8 @@
 
         var observer = new IntersectionObserver(function(entries, observer) {
             entries.forEach((element) => {
-                if (element.isIntersecting) {   
+                if (element.isIntersecting) {  
+                   
                     animations.map((item, index) => {
                         if(index > 0 ) {
                             animations[index].cancel();
@@ -167,6 +164,7 @@
                         }
                     })   
                 } else {
+                    
                     animations.map((item, index) => {
                         animations[index].cancel();
                         animations[index].pause();
@@ -189,32 +187,4 @@
 
     createStoryPanels();
 
-    window.fsAttributes = window.fsAttributes || [];
-    window.fsAttributes.push([
-    'cmsload',
-    (listInstances) => {
-				
-        // The callback passes a `listInstances` array with all the `CMSList` instances on the page.
-        const [listInstance] = listInstances;
-        
-         let container = document.querySelector('.story-container-wrap');
-              container.addEventListener('scroll', function() {
-                    progress = (container.scrollTop / ( container.scrollHeight - window.innerHeight ) ) * 100;
-                   
-                    if(progress > 96) {
-                    		console.log('Past 96!');
-                        if(!$('.stories-nav-next')[0].getAttribute('style')) {
-                        		console.log('clicked!');
-                            $('.stories-nav-next')[0].click();
-                        } 
-                    }
-                });
-        	
-        // The `renderitems` event runs whenever the list renders items after switching pages.
-        listInstance.on('renderitems', (renderedItems) => {
-            createStoryPanels();
-        });
-        
-    },
-    ]);
 })();
