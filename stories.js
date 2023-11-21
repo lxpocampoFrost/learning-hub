@@ -9,14 +9,16 @@
     const storyContentContainerClass = '.stories-content';
     const storyPanelClass = '.story';
 
+    let storiesCollection = [];
+
     function createStoryPanels() {
         const storyMainContainer = document.querySelectorAll(mainContainerClass);
         const progressBar = storyMainContainer[0].querySelector(barClass).cloneNode(true);
-
-        let storiesCollection = [];
         
         storyMainContainer.forEach((container, index) => {
+            console.log(storyMainContainer);
             if(storiesCollection.includes(container) == false) {
+                console.log('included');
                 let storyWrap = container.querySelector(mainStoryContainerClass);
                 let storyBarWrap = container.querySelector(mainBarContainerClass);
                 let storyContent = container.querySelectorAll(`${storyContentContainerClass} > ${storyPanelClass}`);
@@ -26,8 +28,14 @@
                     storyBarWrap.appendChild(progressBar.cloneNode(true));
                 });
 
-                container.querySelector(storyContentContainerClass).remove();
-                container.querySelector(barClass).remove();
+                if(container.querySelector(storyContentContainerClass)) {
+                    container.querySelector(storyContentContainerClass).remove();
+                }
+               
+                if(container.querySelector(barClass)) {
+                    container.querySelector(barClass).remove();
+                }
+                
 
                 storiesCollection.push(container);
             }
@@ -199,4 +207,6 @@
         },
     ]);
 
+
 })();
+
