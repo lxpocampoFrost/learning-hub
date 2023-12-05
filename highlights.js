@@ -1,5 +1,3 @@
-
-
 (function () {
     const mainContainerClass = '.story-container';
 
@@ -7,11 +5,16 @@
     const barClass = '.stories-bar';
     const progressBarClass = '.stories-progress';
 
-    const mainStoryContainerClass = '.story-wrap';
-    const storyContentContainerClass = '.stories-content';
     const storyPanelClass = '.story';
 
     let storiesCollection = [];
+    let highlightMainlist = [];
+
+    let currentHighlight = document.querySelector('.story-container.current-highlight');
+    let initialHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
+    let highlightLoader = document.querySelector('.highlight-loader');
+
+    highlightMainlist.push(currentHighlight);
 
     function createStoryPanels() {
         const storyMainContainer = document.querySelectorAll(mainContainerClass);
@@ -20,29 +23,20 @@
         storyMainContainer.forEach((container, index) => {
             if(storiesCollection.includes(container) == false) {
                
-                let storyWrap = container.querySelector(mainStoryContainerClass);
                 let storyBarWrap = container.querySelector(mainBarContainerClass);
                 let storyContent = container.querySelectorAll(`${storyPanelClass}`);
 
                 storyContent.forEach((content, index) => {
-                    // storyWrap.appendChild(content);
                     storyBarWrap.appendChild(progressBar.cloneNode(true));
                 });
-
-                // if(container.querySelector(storyContentContainerClass)) {
-                //     container.querySelector(storyContentContainerClass).remove();
-                // }
                
                 if(container.querySelector(barClass)) {
                     container.querySelector(barClass).remove();
                 }
                 
-
                 storiesCollection.push(container);
             }
         })  
-
-        console.log(storiesCollection);
 
         storiesCollection.forEach((story, index) => {
             animateStories(story)
@@ -70,13 +64,10 @@
         let windowSize = window.innerWidth;
         let storyContainerWidth = container.getBoundingClientRect().width;
         let clickAreaAllocation = Math.ceil(0.20 * storyContainerWidth);
+       
         let currentStory = 0;
         let interactionThreshold = 100;
         let eventStartTime, coordsX;
-
-        // console.log('storyContainerWidth: ', storyContainerWidth);
-        // console.log('clickAreaAllocation', clickAreaAllocation);
-        // console.log(storyContainerWidth * clickAreaAllocation);
 
         storiesPanel.forEach((panel) => {
             if(panel.getAttribute('data-duration')) {
@@ -102,7 +93,6 @@
         })
 
         //Add controls
-    
         function setEventData(event) {
             let rect = event.target.getBoundingClientRect();
                 
@@ -139,8 +129,6 @@
                 
                 animations[currentStory].play();
         }
-
-        
 
         var observer = new IntersectionObserver(function(entries, observer) {
             entries.forEach((element) => {
@@ -196,26 +184,49 @@
         // Start observing the element
         observer.observe(container);
     }
-    
-    let currentHighlight = document.querySelector('.story-container.current-highlight').cloneNode(true);
-    let targetElement = document.querySelector('.suggested-stories-container');
 
-    document.querySelector('.story-container.current-highlight').remove();
-    targetElement.insertBefore(currentHighlight, targetElement.firstChild);
-    targetElement.scrollTop = 0;
-
-    createStoryPanels();
+    function setLoadMore (container) {
+        container.addEventListener('scroll', function() {
+              progress = (container.scrollTop / ( container.scrollHeight - window.innerHeight ) ) * 100;
+              console.log(progress);
+              if(progress > 98) {
+                      console.log('Past 96!');
+                  if(!$('#highlight-next')[0].getAttribute('style')) {
+                          console.log('clicked!');
+                      $('#highlight-next')[0].click();
+                  } 
+              }
+          });
+    }
 
     //Everytime infinite scroll loads a new item, create a stories panel
     window.fsAttributes = window.fsAttributes || [];
     window.fsAttributes.push([
     'cmsload',
     (listInstances) => {   
-            // The callback passes a `listInstances` array with all the `CMSList` instances on the page.
             const [listInstance] = listInstances;
-                
-            // The `renderitems` event runs whenever the list renders items after switching pages.
+
+            let scrollContainer = document.querySelector('.highlight-scroll-container');
+            initialHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item')
+            
+            initialHighlightItems.forEach((item) => {
+                highlightMainlist.push(item);
+                scrollContainer.append(item);
+            })
+
+            setLoadMore(scrollContainer);
+            createStoryPanels();
+            
             listInstance.on('renderitems', (renderedItems) => {
+               
+                renderedItems.map((item) => {
+                    if(!highlightMainlist.includes(item.element)) {
+                        highlightMainlist.push(item.element);
+                        scrollContainer.append(item.element);
+                    }
+                })
+          
+                highlightLoader.remove();
                 createStoryPanels();
             });
         },
