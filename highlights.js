@@ -53,7 +53,7 @@
     function animateStories(container) {
         let options = {
             root: null,
-            threshold: 1,
+            threshold: 0.8,
         }
 
         const progresBarMove = [
