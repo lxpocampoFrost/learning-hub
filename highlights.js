@@ -156,9 +156,9 @@
 
                     if(index == scrollContainerLength - 1) {
                         elemName = element.target.querySelector('.highlight-title').textContent;
-                        if(!$('#highlight-next')[0].getAttribute('style')) {
-                            $('#highlight-next')[0].click();
-                        }
+                        // if(!$('#highlight-next')[0].getAttribute('style')) {
+                        //     $('#highlight-next')[0].click();
+                        // }
                         // element.target.scrollIntoView();
                     } else {
                         elemName = element.target.querySelector('.highlight-title').textContent;
