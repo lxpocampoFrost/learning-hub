@@ -5,14 +5,20 @@
     const barClass = '.stories-bar';
     const progressBarClass = '.stories-progress';
 
+    const mainStoryContainerClass = '.story-wrap';
     const storyPanelClass = '.story';
 
     let storiesCollection = [];
     let highlightMainlist = [];
+    let scrollContainerChildren = [];
 
     let currentHighlight = document.querySelector('.story-container.current-highlight');
-    let initialHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
+    let scrollContainer = document.querySelector('.highlight-scroll-container');
+    let scrollContainerLength = 1;
+
+    let initHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
     let highlightLoader = document.querySelector('.highlight-loader');
+
 
     highlightMainlist.push(currentHighlight);
 
@@ -23,17 +29,18 @@
         storyMainContainer.forEach((container, index) => {
             if(storiesCollection.includes(container) == false) {
                
+                let storyWrap = container.querySelector(mainStoryContainerClass);
                 let storyBarWrap = container.querySelector(mainBarContainerClass);
                 let storyContent = container.querySelectorAll(`${storyPanelClass}`);
 
                 storyContent.forEach((content, index) => {
                     storyBarWrap.appendChild(progressBar.cloneNode(true));
                 });
-               
+
                 if(container.querySelector(barClass)) {
                     container.querySelector(barClass).remove();
                 }
-                
+
                 storiesCollection.push(container);
             }
         })  
@@ -46,7 +53,7 @@
     function animateStories(container) {
         let options = {
             root: null,
-            threshold: 0.8,
+            threshold: 1,
         }
 
         const progresBarMove = [
@@ -63,10 +70,11 @@
 
         let windowSize = window.innerWidth;
         let storyContainerWidth = container.getBoundingClientRect().width;
+
         let clickAreaAllocation = Math.ceil(0.20 * storyContainerWidth);
        
         let currentStory = 0;
-        let interactionThreshold = 100;
+        let interactionThreshold = 200;
         let eventStartTime, coordsX;
 
         storiesPanel.forEach((panel) => {
@@ -87,6 +95,7 @@
                 animations[index].onfinish = function () {
                     animations[index + 1].play();
                     storiesPanel[index + 1].style.zIndex = 2;  
+                    storiesPanel[index + 1].style.opacity = 1;  
                     currentStory = index + 1;
                 }
             } 
@@ -97,6 +106,7 @@
             let rect = event.target.getBoundingClientRect();
                 
             eventStartTime = Date.now();
+            
             coordsX = event.clientX - rect.left;
 
             animations[currentStory].pause(); 
@@ -104,7 +114,6 @@
 
         function setContainerControls() {
             let eventDuration = Date.now() - eventStartTime;
-
                 if(eventDuration < interactionThreshold) {
                     if(coordsX < clickAreaAllocation) {
                         //Previous
@@ -112,7 +121,9 @@
                             animations[currentStory].cancel();
                             animations[currentStory - 1].play();
                             storiesPanel[currentStory].style.zIndex = 0;
+                            storiesPanel[currentStory].style.opacity = 0;
                             storiesPanel[currentStory - 1].style.zIndex = 2;
+                            storiesPanel[currentStory - 1].style.opacity = 1;
                             currentStory = currentStory - 1
                         }
                     } else {
@@ -121,7 +132,9 @@
                             animations[currentStory].finish();
                             animations[currentStory + 1].play();
                             storiesPanel[currentStory].style.zIndex = 0;
+                            storiesPanel[currentStory].style.opacity = 0;
                             storiesPanel[currentStory + 1].style.zIndex = 2;
+                            storiesPanel[currentStory + 1].style.opacity = 1;
                             currentStory = currentStory + 1;
                         }
                     }
@@ -129,17 +142,38 @@
                 
                 animations[currentStory].play();
         }
-
+    
         var observer = new IntersectionObserver(function(entries, observer) {
             entries.forEach((element) => {
-                if (element.isIntersecting) {  
+               
+                if (element.isIntersecting) { 
+                    let elemName;
+                    let index =  [...scrollContainer.children].indexOf(element.target);
+
+                    if(index < 0) {
+                        index =  [...scrollContainer.children].indexOf(element.target.parentNode);
+                    }
+
+                    if(index == scrollContainerLength - 1) {
+                        elemName = element.target.querySelector('.highlight-title').textContent;
+                        if(!$('#highlight-next')[0].getAttribute('style')) {
+                            $('#highlight-next')[0].click();
+                        }
+                        // element.target.scrollIntoView();
+                    } else {
+                        elemName = element.target.querySelector('.highlight-title').textContent;
+                        console.log(elemName);
+                    }
+                    
                     animations.map((item, index) => {
                         if(index > 0 ) {
                             animations[index].cancel();
                             animations[index].pause();
                         } else {
+                            
                             animations[index].play();
                             storiesPanel[0].style.zIndex = 2;
+                            storiesPanel[0].style.opacity = 1;
                             currentStory = 0;
                         }
                     })   
@@ -152,20 +186,22 @@
                         container.addEventListener('mouseup', setContainerControls);
                     } else {
                         container.addEventListener('touchstart', (e) => {
-                            setEventData(e)
+                            setEventData(e.touches[0]);
                         });
             
                         container.addEventListener('touchend', setContainerControls);
                     }
-                    
+
                 } else {
                     animations.map((item, index) => {
                         animations[index].cancel();
                         animations[index].pause();
                         if(index > 0) {
                             storiesPanel[index].style.zIndex = 0;
+                            storiesPanel[index].style.opacity = 0;
                         } else {
                             storiesPanel[index].style.zIndex = 2;
+                            storiesPanel[index].style.opacity = 1;
                         }
                         currentStory = 0;
                     })  
@@ -173,30 +209,16 @@
                     if(windowSize > 1024) {
                         container.removeEventListener('mouseup', setContainerControls);
                     } else {
+                       
                         container.removeEventListener('touchend', setContainerControls);
                     }
-                }
+                }        
             });
+          
         }, options);
-
-        // observer.root.style.border = "2px solid #44aa44";
 
         // Start observing the element
         observer.observe(container);
-    }
-
-    function setLoadMore (container) {
-        container.addEventListener('scroll', function() {
-              progress = (container.scrollTop / ( container.scrollHeight - window.innerHeight ) ) * 100;
-              console.log(progress);
-              if(progress > 98) {
-                      console.log('Past 96!');
-                  if(!$('#highlight-next')[0].getAttribute('style')) {
-                          console.log('clicked!');
-                      $('#highlight-next')[0].click();
-                  } 
-              }
-          });
     }
 
     //Everytime infinite scroll loads a new item, create a stories panel
@@ -206,26 +228,27 @@
     (listInstances) => {   
             const [listInstance] = listInstances;
 
-            let scrollContainer = document.querySelector('.highlight-scroll-container');
-            initialHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item')
+            initHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
             
-            initialHighlightItems.forEach((item) => {
+            initHighlightItems.forEach((item) => {
                 highlightMainlist.push(item);
                 scrollContainer.append(item);
             })
 
-            setLoadMore(scrollContainer);
+            // setLoadMore(scrollContainer);
+            console.log(scrollContainer.children);
+            scrollContainerLength = scrollContainer.children.length;
             createStoryPanels();
-            
+
             listInstance.on('renderitems', (renderedItems) => {
-               
                 renderedItems.map((item) => {
                     if(!highlightMainlist.includes(item.element)) {
                         highlightMainlist.push(item.element);
                         scrollContainer.append(item.element);
                     }
                 })
-          
+               
+                scrollContainerLength = scrollContainer.children.length;
                 highlightLoader.remove();
                 createStoryPanels();
             });
