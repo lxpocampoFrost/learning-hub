@@ -7,6 +7,7 @@ class Highlights {
         this.scrollContainer.childNodes.forEach((node) => {
             Highlights.#addBars(node);
             this.displayPanel(node.querySelector('.story'));
+            this.attachSocialLink(node);
             this.addAnimation(node);
             this.addTargetToObserver(node);
             this.addNodeControls(node);
@@ -27,6 +28,7 @@ class Highlights {
         if(node != null) {
             Highlights.#addBars(node);
             this.displayPanel(node.querySelector('.story'));
+            this.attachSocialLink(node);
             this.addAnimation(node);
             this.addTargetToObserver(node);
             this.addNodeControls(node);
@@ -44,7 +46,6 @@ class Highlights {
     
             node.addEventListener('mouseup', () => {
                 if(Highlights.currentNodeInView.node == node) {
-                    console.log(Highlights.currentNodeInView);
                     Highlights.setupContainerControls(
                         Highlights.currentNodeInView.node,
                         Highlights.currentNodeInView.animations, 
@@ -61,7 +62,6 @@ class Highlights {
 
             node.addEventListener('touchend', () => {
                 if(Highlights.currentNodeInView.node == node) {
-                    console.log(Highlights.currentNodeInView);
                     Highlights.setupContainerControls(
                         Highlights.currentNodeInView.node,
                         Highlights.currentNodeInView.animations, 
@@ -85,54 +85,6 @@ class Highlights {
         highlightNode.style.zIndex = 0;
     }
 
-    static setEvent(event, elementAnimation) {
-        let rect =  event.target.getBoundingClientRect();
-        
-        this.eventStartTime = Date.now();
-        
-        Highlights.coordsX =  event.clientX - rect.left;
-
-        elementAnimation[Highlights.currentIndex].pause(); 
-    }
-
-    static setupContainerControls(node, elementAnimation, elementStoryPanel) {
-        let eventDuration = Date.now() - this.eventStartTime;
-        let clickAreaAllocation = Math.ceil(0.20 * node.getBoundingClientRect().width);
-    
-        if(eventDuration < Highlights.interactionThreshold) {
-            if(Highlights.coordsX < clickAreaAllocation) {
-                //Previous
-                if(Highlights.currentIndex > 0 ) {
-                    elementAnimation[Highlights.currentIndex].cancel();
-                    elementAnimation[Highlights.currentIndex - 1].play();
-                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
-                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
-                    elementStoryPanel[Highlights.currentIndex - 1].style.zIndex = 2;
-                    elementStoryPanel[Highlights.currentIndex - 1].style.opacity = 1;
-                    Highlights.currentIndex = Highlights.currentIndex - 1
-                }
-            } else {
-                //Next 
-                if(Highlights.currentIndex != elementAnimation.length - 1 ) {
-                    // console.log('clicked: ', Highlights.currentIndex);
-                    elementAnimation[Highlights.currentIndex].finish();
-                    elementAnimation[Highlights.currentIndex + 1].play();
-                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
-                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
-                    elementStoryPanel[Highlights.currentIndex + 1].style.zIndex = 2;
-                    elementStoryPanel[Highlights.currentIndex + 1].style.opacity = 1;
-                    Highlights.currentIndex = Highlights.currentIndex + 1;
-                }
-            }
-        } 
-        
-        elementAnimation[Highlights.currentIndex].play();
-    }
-
-    static setCurrentNode(nodeObject) {
-        Highlights.currentNodeInView = nodeObject;
-    }
-
     observerCallback(entries) {
         let scrollContainer = document.querySelector('.highlight-scroll-container');
         let scrollContainerLength = document.querySelector('.highlight-scroll-container').children.length;
@@ -142,16 +94,12 @@ class Highlights {
 
             Highlights.currentIndex = 0;
 
-            // console.log(elementAnimation);
             elementAnimation.animations.map((item, index) => {
                 item.cancel();
                 item.pause();
             })
             
             if (element.isIntersecting) { 
-                
-                // console.log(element.target.querySelector('.highlight-title').textContent);
-                
                 //Infinite scroll - auto click next
                 if(scrollContainerLength > 1) {
                     let index =  [...scrollContainer.children].indexOf(element.target);
@@ -233,6 +181,66 @@ class Highlights {
         })
 
         Highlights.animationList.push(animationObject);
+    }
+
+    attachSocialLink(node) {
+        const fbLinkElement = node.querySelector('[data-social="facebook"]');
+        const twitterLinkElement = node.querySelector('[data-social="twitter"]');
+
+        let slug = node.querySelector('.highlight-slug').textContent;
+        let baseUrl = window.location.origin;
+        let facebookURL = `https://www.facebook.com/sharer/sharer.php?u=${baseUrl}/highlights/${slug}`;
+        let twitterURL = `https://twitter.com/intent/tweet?url=${baseUrl}/highlights/${slug}`; 
+
+        fbLinkElement.href = facebookURL;
+        twitterLinkElement.href = twitterURL;
+    }
+
+    static setEvent(event, elementAnimation) {
+        let rect =  event.target.getBoundingClientRect();
+        
+        this.eventStartTime = Date.now();
+        
+        Highlights.coordsX =  event.clientX - rect.left;
+
+        elementAnimation[Highlights.currentIndex].pause(); 
+    }
+
+    static setupContainerControls(node, elementAnimation, elementStoryPanel) {
+        let eventDuration = Date.now() - this.eventStartTime;
+        let clickAreaAllocation = Math.ceil(0.20 * node.getBoundingClientRect().width);
+    
+        if(eventDuration < Highlights.interactionThreshold) {
+            if(Highlights.coordsX < clickAreaAllocation) {
+                //Previous
+                if(Highlights.currentIndex > 0 ) {
+                    elementAnimation[Highlights.currentIndex].cancel();
+                    elementAnimation[Highlights.currentIndex - 1].play();
+                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
+                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
+                    elementStoryPanel[Highlights.currentIndex - 1].style.zIndex = 2;
+                    elementStoryPanel[Highlights.currentIndex - 1].style.opacity = 1;
+                    Highlights.currentIndex = Highlights.currentIndex - 1
+                }
+            } else {
+                //Next 
+                if(Highlights.currentIndex != elementAnimation.length - 1 ) {
+                    elementAnimation[Highlights.currentIndex].finish();
+                    elementAnimation[Highlights.currentIndex + 1].play();
+                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
+                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
+                    elementStoryPanel[Highlights.currentIndex + 1].style.zIndex = 2;
+                    elementStoryPanel[Highlights.currentIndex + 1].style.opacity = 1;
+                    Highlights.currentIndex = Highlights.currentIndex + 1;
+                }
+            }
+        } 
+        
+        elementAnimation[Highlights.currentIndex].play();
+    }
+
+    static setCurrentNode(nodeObject) {
+        Highlights.currentNodeInView = nodeObject;
     }
 
     static #addBars(node) {
