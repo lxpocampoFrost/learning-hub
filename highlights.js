@@ -56,7 +56,7 @@ class Highlights {
         } else {
             node.addEventListener('touchstart', (event) => {
                 if(Highlights.currentNodeInView.node == node) {
-                    Highlights.setEvent(event, Highlights.currentNodeInView.animations);
+                    Highlights.setEvent(event.touches[0], Highlights.currentNodeInView.animations);
                 }
             })
 
@@ -70,9 +70,6 @@ class Highlights {
                 }
             })
         }
-        
-
-       
     }
 
     displayPanel(highlightNode) {
