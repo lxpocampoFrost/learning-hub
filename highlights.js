@@ -1,259 +1,268 @@
-(function () {
-    const mainContainerClass = '.story-container';
+class Highlights {
+    constructor() {
+        this.observerOptions = { root: null, threshold: 1,}
+        this.observer = new IntersectionObserver(this.observerCallback, this.observerOptions);
 
-    const mainBarContainerClass = '.stories-bar-wrap';
-    const barClass = '.stories-bar';
-    const progressBarClass = '.stories-progress';
+        this.scrollContainer = document.querySelector('.highlight-scroll-container');
+        this.scrollContainer.childNodes.forEach((node) => {
+            Highlights.#addBars(node);
+            this.displayPanel(node.querySelector('.story'));
+            this.addAnimation(node);
+            this.addTargetToObserver(node);
+            this.addNodeControls(node);
+        });
 
-    const mainStoryContainerClass = '.story-wrap';
-    const storyPanelClass = '.story';
-
-    let storiesCollection = [];
-    let highlightMainlist = [];
-    let scrollContainerChildren = [];
-
-    let currentHighlight = document.querySelector('.story-container.current-highlight');
-    let scrollContainer = document.querySelector('.highlight-scroll-container');
-    let scrollContainerLength = 1;
-
-    let initHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
-    let highlightLoader = document.querySelector('.highlight-loader');
-
-
-    highlightMainlist.push(currentHighlight);
-
-    function createStoryPanels() {
-        const storyMainContainer = document.querySelectorAll(mainContainerClass);
-        const progressBar = storyMainContainer[0].querySelector(barClass).cloneNode(true);
-        
-        storyMainContainer.forEach((container, index) => {
-            if(storiesCollection.includes(container) == false) {
-               
-                let storyWrap = container.querySelector(mainStoryContainerClass);
-                let storyBarWrap = container.querySelector(mainBarContainerClass);
-                let storyContent = container.querySelectorAll(`${storyPanelClass}`);
-
-                storyContent.forEach((content, index) => {
-                    storyBarWrap.appendChild(progressBar.cloneNode(true));
-                });
-
-                if(container.querySelector(barClass)) {
-                    container.querySelector(barClass).remove();
-                }
-
-                storiesCollection.push(container);
-            }
-        })  
-
-        storiesCollection.forEach((story, index) => {
-            animateStories(story)
-        })
+        this.loader = document.querySelector('.highlight-loader');
     }
 
-    function animateStories(container) {
-        let options = {
-            root: null,
-            threshold: 0.8,
-        }
+    static windowSize = window.innerWidth;
+    static animationList = [];
+    static interactionThreshold = 200;
+    static currentIndex = 0;
+    static eventStartTime;
+    static coordsX;
+    static currentNodeInView;
 
+    addNodeToList(node) {
+        if(node != null) {
+            Highlights.#addBars(node);
+            this.displayPanel(node.querySelector('.story'));
+            this.addAnimation(node);
+            this.addTargetToObserver(node);
+            this.addNodeControls(node);
+            this.scrollContainer.append(node);
+        } 
+    }
+
+    addNodeControls(node) {
+        if(Highlights.windowSize > 1024) {
+            node.addEventListener('mousedown', (event) => {
+                if(Highlights.currentNodeInView.node == node) {
+                    Highlights.setEvent(event, Highlights.currentNodeInView.animations);
+                }
+            })
+    
+            node.addEventListener('mouseup', () => {
+                if(Highlights.currentNodeInView.node == node) {
+                    console.log(Highlights.currentNodeInView);
+                    Highlights.setupContainerControls(
+                        Highlights.currentNodeInView.node,
+                        Highlights.currentNodeInView.animations, 
+                        Highlights.currentNodeInView.panels
+                    );
+                }
+            })
+        } else {
+            node.addEventListener('touchstart', (event) => {
+                if(Highlights.currentNodeInView.node == node) {
+                    Highlights.setEvent(event, Highlights.currentNodeInView.animations);
+                }
+            })
+
+            node.addEventListener('touchend', () => {
+                if(Highlights.currentNodeInView.node == node) {
+                    console.log(Highlights.currentNodeInView);
+                    Highlights.setupContainerControls(
+                        Highlights.currentNodeInView.node,
+                        Highlights.currentNodeInView.animations, 
+                        Highlights.currentNodeInView.panels
+                    );
+                }
+            })
+        }
+        
+
+       
+    }
+
+    displayPanel(highlightNode) {
+        highlightNode.style.opacity = 1;
+        highlightNode.style.zIndex = 2;
+    }
+
+    hidePanel(highlightNode) {
+        highlightNode.style.opacity = 0;
+        highlightNode.style.zIndex = 0;
+    }
+
+    static setEvent(event, elementAnimation) {
+        let rect =  event.target.getBoundingClientRect();
+        
+        this.eventStartTime = Date.now();
+        
+        Highlights.coordsX =  event.clientX - rect.left;
+
+        elementAnimation[Highlights.currentIndex].pause(); 
+    }
+
+    static setupContainerControls(node, elementAnimation, elementStoryPanel) {
+        let eventDuration = Date.now() - this.eventStartTime;
+        let clickAreaAllocation = Math.ceil(0.20 * node.getBoundingClientRect().width);
+    
+        if(eventDuration < Highlights.interactionThreshold) {
+            if(Highlights.coordsX < clickAreaAllocation) {
+                //Previous
+                if(Highlights.currentIndex > 0 ) {
+                    elementAnimation[Highlights.currentIndex].cancel();
+                    elementAnimation[Highlights.currentIndex - 1].play();
+                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
+                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
+                    elementStoryPanel[Highlights.currentIndex - 1].style.zIndex = 2;
+                    elementStoryPanel[Highlights.currentIndex - 1].style.opacity = 1;
+                    Highlights.currentIndex = Highlights.currentIndex - 1
+                }
+            } else {
+                //Next 
+                if(Highlights.currentIndex != elementAnimation.length - 1 ) {
+                    // console.log('clicked: ', Highlights.currentIndex);
+                    elementAnimation[Highlights.currentIndex].finish();
+                    elementAnimation[Highlights.currentIndex + 1].play();
+                    elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
+                    elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
+                    elementStoryPanel[Highlights.currentIndex + 1].style.zIndex = 2;
+                    elementStoryPanel[Highlights.currentIndex + 1].style.opacity = 1;
+                    Highlights.currentIndex = Highlights.currentIndex + 1;
+                }
+            }
+        } 
+        
+        elementAnimation[Highlights.currentIndex].play();
+    }
+
+    static setCurrentNode(nodeObject) {
+        Highlights.currentNodeInView = nodeObject;
+    }
+
+    observerCallback(entries) {
+        let scrollContainer = document.querySelector('.highlight-scroll-container');
+        let scrollContainerLength = document.querySelector('.highlight-scroll-container').children.length;
+        
+        entries.forEach((element, index) => {
+            let elementAnimation = Highlights.animationList.find(item => item.node == element.target);
+
+            Highlights.currentIndex = 0;
+
+            // console.log(elementAnimation);
+            elementAnimation.animations.map((item, index) => {
+                item.cancel();
+                item.pause();
+            })
+            
+            if (element.isIntersecting) { 
+                
+                // console.log(element.target.querySelector('.highlight-title').textContent);
+                
+                //Infinite scroll - auto click next
+                if(scrollContainerLength > 1) {
+                    let index =  [...scrollContainer.children].indexOf(element.target);
+
+                    if(index == scrollContainerLength - 1) {
+                        if($('#highlight-next').length > 0){
+                            if(!$('#highlight-next')[0].getAttribute('style')) {
+                                $('#highlight-next')[0].click();
+                            }
+                            element.target.scrollIntoView();
+                        }
+                    }
+                }
+
+                elementAnimation.animations.map((item, index) => {
+                    if(index < 1) {
+                        item.play();
+                    }
+                    
+                    if(index < elementAnimation.animations.length - 1) {
+                        item.onfinish = function () {
+                            elementAnimation.animations[index + 1].play();
+                            elementAnimation.panels[index + 1].style.zIndex = 2;  
+                            elementAnimation.panels[index + 1].style.opacity = 1; 
+                            Highlights.currentIndex = index + 1;
+                        }
+                    }
+                })
+
+                Highlights.setCurrentNode(elementAnimation);
+
+            } else {    
+                elementAnimation.panels[Highlights.currentIndex].style.zIndex = 2;
+                elementAnimation.panels[Highlights.currentIndex].style.opacity = 1;
+
+                elementAnimation.animations.map((item, index) => {
+                    item.cancel();
+                    item.pause();    
+
+                    if(index > 0) {
+                        elementAnimation.panels[index].style.zIndex = 0;  
+                        elementAnimation.panels[index].style.opacity = 0; 
+                    }
+                   
+                    item.onfinish = function () {};
+                });   
+                
+                $('.highlight-controls-container').removeClass('active-vertical');
+                $('.highlight-controls-container').children('.social-icon').css('display', 'none');
+                $('.highlight-controls-container').children('.display-icon').css('display', 'flex');
+            }   
+        });
+    }
+
+    addTargetToObserver(node) {
+        this.observer.observe(node);
+    }
+
+    addAnimation(node) {
         const progresBarMove = [
             {width: "0%"},
             {width: "100%"}
         ]
 
-        let progressBars = container.querySelectorAll(progressBarClass);
-        let storiesPanel = container.querySelectorAll(storyPanelClass);
-        let defaultDuration = 3000;
-        
-        let animations = [];
-        let panelDurations = [];
+        let progressBars = node.querySelectorAll('.highlights-progress');
+        let panels = node.querySelectorAll('.story');
 
-        let windowSize = window.innerWidth;
-        let storyContainerWidth = container.getBoundingClientRect().width;
-
-        let clickAreaAllocation = Math.ceil(0.20 * storyContainerWidth);
-       
-        let currentStory = 0;
-        let interactionThreshold = 200;
-        let eventStartTime, coordsX;
-
-        storiesPanel.forEach((panel) => {
-            if(panel.getAttribute('data-duration')) {
-                panelDurations.push(parseInt(panel.getAttribute('data-duration')));
-            } else {
-                panelDurations.push(defaultDuration);
-            }
-        })
+        let animationObject = {
+            node: node,
+            animations: [],
+            panels: panels,
+        }
 
         progressBars.forEach((bar, index) => {
-            animations.push(bar.animate(progresBarMove, {
-                duration: panelDurations[index],
+            animationObject.animations.push(bar.animate(progresBarMove, {
+                duration: 3000,
                 fill: "forwards",
             }));
-
-            if(index != progressBars.length - 1) {
-                animations[index].onfinish = function () {
-                    animations[index + 1].play();
-                    storiesPanel[index + 1].style.zIndex = 2;  
-                    storiesPanel[index + 1].style.opacity = 1;  
-                    currentStory = index + 1;
-                }
-            } 
         })
 
-        //Add controls
-        function setEventData(event) {
-            let rect = event.target.getBoundingClientRect();
-                
-            eventStartTime = Date.now();
-            
-            coordsX = event.clientX - rect.left;
-
-            animations[currentStory].pause(); 
-        }
-
-        function setContainerControls() {
-            let eventDuration = Date.now() - eventStartTime;
-                if(eventDuration < interactionThreshold) {
-                    if(coordsX < clickAreaAllocation) {
-                        //Previous
-                        if(currentStory > 0 ) {
-                            animations[currentStory].cancel();
-                            animations[currentStory - 1].play();
-                            storiesPanel[currentStory].style.zIndex = 0;
-                            storiesPanel[currentStory].style.opacity = 0;
-                            storiesPanel[currentStory - 1].style.zIndex = 2;
-                            storiesPanel[currentStory - 1].style.opacity = 1;
-                            currentStory = currentStory - 1
-                        }
-                    } else {
-                        //Next 
-                        if(currentStory != animations.length - 1 ) {
-                            animations[currentStory].finish();
-                            animations[currentStory + 1].play();
-                            storiesPanel[currentStory].style.zIndex = 0;
-                            storiesPanel[currentStory].style.opacity = 0;
-                            storiesPanel[currentStory + 1].style.zIndex = 2;
-                            storiesPanel[currentStory + 1].style.opacity = 1;
-                            currentStory = currentStory + 1;
-                        }
-                    }
-                } 
-                
-                animations[currentStory].play();
-        }
-    
-        var observer = new IntersectionObserver(function(entries, observer) {
-            entries.forEach((element) => {
-               
-                if (element.isIntersecting) { 
-                    let elemName;
-                    let index =  [...scrollContainer.children].indexOf(element.target);
-
-                    if(index < 0) {
-                        index =  [...scrollContainer.children].indexOf(element.target.parentNode);
-                    }
-
-                    if(index == scrollContainerLength - 1) {
-                        elemName = element.target.querySelector('.highlight-title').textContent;
-                        // if(!$('#highlight-next')[0].getAttribute('style')) {
-                        //     $('#highlight-next')[0].click();
-                        // }
-                        // element.target.scrollIntoView();
-                    } else {
-                        elemName = element.target.querySelector('.highlight-title').textContent;
-                        console.log(elemName);
-                    }
-                    
-                    animations.map((item, index) => {
-                        if(index > 0 ) {
-                            animations[index].cancel();
-                            animations[index].pause();
-                        } else {
-                            
-                            animations[index].play();
-                            storiesPanel[0].style.zIndex = 2;
-                            storiesPanel[0].style.opacity = 1;
-                            currentStory = 0;
-                        }
-                    })   
-
-                    if(windowSize > 1024) {
-                        container.addEventListener('mousedown', (e) => {
-                            setEventData(e)
-                        });
-            
-                        container.addEventListener('mouseup', setContainerControls);
-                    } else {
-                        container.addEventListener('touchstart', (e) => {
-                            setEventData(e.touches[0]);
-                        });
-            
-                        container.addEventListener('touchend', setContainerControls);
-                    }
-
-                } else {
-                    animations.map((item, index) => {
-                        animations[index].cancel();
-                        animations[index].pause();
-                        if(index > 0) {
-                            storiesPanel[index].style.zIndex = 0;
-                            storiesPanel[index].style.opacity = 0;
-                        } else {
-                            storiesPanel[index].style.zIndex = 2;
-                            storiesPanel[index].style.opacity = 1;
-                        }
-                        currentStory = 0;
-                    })  
-
-                    if(windowSize > 1024) {
-                        container.removeEventListener('mouseup', setContainerControls);
-                    } else {
-                       
-                        container.removeEventListener('touchend', setContainerControls);
-                    }
-                }        
-            });
-          
-        }, options);
-
-        // Start observing the element
-        observer.observe(container);
+        Highlights.animationList.push(animationObject);
     }
 
-    //Everytime infinite scroll loads a new item, create a stories panel
-    window.fsAttributes = window.fsAttributes || [];
-    window.fsAttributes.push([
-    'cmsload',
-    (listInstances) => {   
-            const [listInstance] = listInstances;
+    static #addBars(node) {
+        let progressBarContainer = node.querySelector('.stories-bar-wrap');
+        let progressBarTemplate;
 
-            initHighlightItems = document.querySelector('.highlight-loader').querySelectorAll('.highlight-list-item');
-            
-            initHighlightItems.forEach((item) => {
-                highlightMainlist.push(item);
-                scrollContainer.append(item);
+        node.querySelectorAll('.story').forEach((element) => {
+            progressBarTemplate = document.querySelector('.highlights-bar').cloneNode(true);
+            progressBarContainer.append(progressBarTemplate);
+        })
+    }
+}
+
+let highlights = new Highlights();
+
+window.fsAttributes = window.fsAttributes || [];
+window.fsAttributes.push([
+'cmsload',
+(listInstances) => {   
+        const [listInstance] = listInstances;
+
+        highlights.loader.querySelectorAll('.highlight-list-item > .story-container').forEach((node) => {
+            highlights.addNodeToList(node);
+        });
+    
+        listInstance.on('renderitems', (renderedItems) => {
+            renderedItems.map((item) => {
+                highlights.addNodeToList(item.element.querySelector('.story-container'));
             })
+        });
+    },
+]);
 
-            // setLoadMore(scrollContainer);
-            console.log(scrollContainer.children);
-            scrollContainerLength = scrollContainer.children.length;
-            createStoryPanels();
-
-            listInstance.on('renderitems', (renderedItems) => {
-                renderedItems.map((item) => {
-                    if(!highlightMainlist.includes(item.element)) {
-                        highlightMainlist.push(item.element);
-                        scrollContainer.append(item.element);
-                    }
-                })
-               
-                scrollContainerLength = scrollContainer.children.length;
-                highlightLoader.remove();
-                createStoryPanels();
-            });
-        },
-    ]);
-
-
-})();
