@@ -3,7 +3,7 @@ class Highlights {
         this.observerOptions = { root: null, threshold: 1,}
         this.observer = new IntersectionObserver(this.observerCallback, this.observerOptions);
 
-        this.scrollContainer = document.querySelector('.highlight-scroll-container');
+        this.scrollContainer = document.querySelector('.lh-highlight-scroll-container');
         this.scrollContainer.childNodes.forEach((node) => {
             Highlights.#addBars(node);
             this.displayPanel(node.querySelector('.story'));
@@ -13,7 +13,7 @@ class Highlights {
             this.addNodeControls(node);
         });
 
-        this.loader = document.querySelector('.highlight-loader');
+        this.loader = document.querySelector('.lh-highlight-loader');
     }
 
     static windowSize = window.innerWidth;
@@ -27,7 +27,7 @@ class Highlights {
     addNodeToList(node) {
         if(node != null) {
             Highlights.#addBars(node);
-            this.displayPanel(node.querySelector('.story'));
+            this.displayPanel(node.querySelector('.lh-story'));
             this.attachSocialLink(node);
             this.addAnimation(node);
             this.addTargetToObserver(node);
@@ -83,8 +83,8 @@ class Highlights {
     }
 
     observerCallback(entries) {
-        let scrollContainer = document.querySelector('.highlight-scroll-container');
-        let scrollContainerLength = document.querySelector('.highlight-scroll-container').children.length;
+        let scrollContainer = document.querySelector('.lh-highlight-scroll-container');
+        let scrollContainerLength = document.querySelector('.lh-highlight-scroll-container').children.length;
         
         entries.forEach((element, index) => {
             let elementAnimation = Highlights.animationList.find(item => item.node == element.target);
@@ -144,9 +144,9 @@ class Highlights {
                     item.onfinish = function () {};
                 });   
                 
-                $('.highlight-controls-container').removeClass('active-vertical');
-                $('.highlight-controls-container').children('.social-icon').css('display', 'none');
-                $('.highlight-controls-container').children('.display-icon').css('display', 'flex');
+                $('.lh-highlight-controls-container').removeClass('lh-active-vertical');
+                $('.lh-highlight-controls-container').children('.lh-social-icon').css('display', 'none');
+                $('.lh-highlight-controls-container').children('.lh-display-icon').css('display', 'flex');
             }   
         });
     }
@@ -161,8 +161,8 @@ class Highlights {
             {width: "100%"}
         ]
 
-        let progressBars = node.querySelectorAll('.highlights-progress');
-        let panels = node.querySelectorAll('.story');
+        let progressBars = node.querySelectorAll('.lh-highlights-progress');
+        let panels = node.querySelectorAll('.lh-story');
 
         let animationObject = {
             node: node,
@@ -241,11 +241,11 @@ class Highlights {
     }
 
     static #addBars(node) {
-        let progressBarContainer = node.querySelector('.stories-bar-wrap');
+        let progressBarContainer = node.querySelector('.lh-stories-bar-wrap');
         let progressBarTemplate;
 
         node.querySelectorAll('.story').forEach((element) => {
-            progressBarTemplate = document.querySelector('.highlights-bar').cloneNode(true);
+            progressBarTemplate = document.querySelector('.lh-highlights-bar').cloneNode(true);
             progressBarContainer.append(progressBarTemplate);
         })
     }
@@ -259,15 +259,14 @@ window.fsAttributes.push([
 (listInstances) => {   
         const [listInstance] = listInstances;
 
-        highlights.loader.querySelectorAll('.highlight-list-item > .story-container').forEach((node) => {
+        highlights.loader.querySelectorAll('.lh-highlight-list-item > .lh-story-container').forEach((node) => {
             highlights.addNodeToList(node);
         });
     
         listInstance.on('renderitems', (renderedItems) => {
             renderedItems.map((item) => {
-                highlights.addNodeToList(item.element.querySelector('.story-container'));
+                highlights.addNodeToList(item.element.querySelector('.lh-story-container'));
             })
         });
     },
 ]);
-
