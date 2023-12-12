@@ -6,7 +6,7 @@ class Highlights {
         this.scrollContainer = document.querySelector('.lh-highlight-scroll-container');
         this.scrollContainer.childNodes.forEach((node) => {
             Highlights.#addBars(node);
-            this.displayPanel(node.querySelector('.story'));
+            this.displayPanel(node.querySelector('.lh-story'));
             this.attachSocialLink(node);
             this.addAnimation(node);
             this.addTargetToObserver(node);
