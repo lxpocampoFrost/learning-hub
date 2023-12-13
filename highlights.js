@@ -5,7 +5,7 @@ class Highlights {
 
         this.scrollContainer = document.querySelector('.lh-highlight-scroll-container');
         this.scrollContainer.childNodes.forEach((node) => {
-            Highlights.#addBars(node);
+            Highlights.addBars(node);
             this.displayPanel(node.querySelector('.lh-story'));
             this.attachSocialLink(node);
             this.addAnimation(node);
@@ -26,7 +26,7 @@ class Highlights {
 
     addNodeToList(node) {
         if(node != null) {
-            Highlights.#addBars(node);
+            Highlights.addBars(node);
             this.displayPanel(node.querySelector('.lh-story'));
             this.attachSocialLink(node);
             this.addAnimation(node);
@@ -88,7 +88,6 @@ class Highlights {
         
         entries.forEach((element, index) => {
             let elementAnimation = Highlights.animationList.find(item => item.node == element.target);
-
             Highlights.currentIndex = 0;
 
             elementAnimation.animations.map((item, index) => {
@@ -102,6 +101,7 @@ class Highlights {
                     let index =  [...scrollContainer.children].indexOf(element.target);
 
                     if(index == scrollContainerLength - 1) {
+
                         if($('#highlight-next').length > 0){
                             if(!$('#highlight-next')[0].getAttribute('style')) {
                                 $('#highlight-next')[0].click();
@@ -240,11 +240,11 @@ class Highlights {
         Highlights.currentNodeInView = nodeObject;
     }
 
-    static #addBars(node) {
+    static addBars(node) {
         let progressBarContainer = node.querySelector('.lh-stories-bar-wrap');
         let progressBarTemplate;
 
-        node.querySelectorAll('.story').forEach((element) => {
+        node.querySelectorAll('.lh-story').forEach((element) => {
             progressBarTemplate = document.querySelector('.lh-highlights-bar').cloneNode(true);
             progressBarContainer.append(progressBarTemplate);
         })
