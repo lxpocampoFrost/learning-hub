@@ -75,13 +75,11 @@ class Highlights {
     displayPanel(highlightNode) {
         highlightNode.style.opacity = 1;
         highlightNode.style.zIndex = 2;
-        highlightNode.style.position = 'relative';
     }
 
     hidePanel(highlightNode) {
         highlightNode.style.opacity = 0;
         highlightNode.style.zIndex = 0;
-        highlightNode.style.position = 'absolute';
     }
 
     observerCallback(entries) {
@@ -142,7 +140,6 @@ class Highlights {
                     if(index > 0) {
                         elementAnimation.panels[index].style.zIndex = 0;  
                         elementAnimation.panels[index].style.opacity = 0; 
-                        elementAnimation.panels[index].style.position = 'absolute'; 
                     }
                    
                     item.onfinish = function () {};
@@ -219,10 +216,8 @@ class Highlights {
                     elementAnimation[Highlights.currentIndex - 1].play();
                     elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
                     elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
-                    elementStoryPanel[Highlights.currentIndex].style.position = 'absolute';
                     elementStoryPanel[Highlights.currentIndex - 1].style.zIndex = 2;
                     elementStoryPanel[Highlights.currentIndex - 1].style.opacity = 1;
-                    elementStoryPanel[Highlights.currentIndex - 1].style.position = 'relative';
                     Highlights.currentIndex = Highlights.currentIndex - 1
                 }
             } else {
@@ -232,7 +227,6 @@ class Highlights {
                     elementAnimation[Highlights.currentIndex + 1].play();
                     elementStoryPanel[Highlights.currentIndex].style.zIndex = 0;
                     elementStoryPanel[Highlights.currentIndex].style.opacity = 0;
-                    elementStoryPanel[Highlights.currentIndex].style.position = 'absolute';
                     elementStoryPanel[Highlights.currentIndex + 1].style.zIndex = 2;
                     elementStoryPanel[Highlights.currentIndex + 1].style.opacity = 1;
                     elementStoryPanel[Highlights.currentIndex + 1].style.opacity = 'relative';
