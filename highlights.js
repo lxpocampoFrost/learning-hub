@@ -187,8 +187,8 @@ class Highlights {
 
         let slug = node.querySelector('.highlight-slug').textContent;
         let baseUrl = window.location.origin;
-        let facebookURL = `https://www.facebook.com/sharer/sharer.php?u=${baseUrl}/highlights/${slug}`;
-        let twitterURL = `https://twitter.com/intent/tweet?url=${baseUrl}/highlights/${slug}`; 
+        let facebookURL = `https://www.facebook.com/sharer/sharer.php?u=${baseUrl}/usapangpera/highlights/${slug}`;
+        let twitterURL = `https://twitter.com/intent/tweet?url=${baseUrl}/usapangpera/highlights/${slug}`; 
 
         fbLinkElement.href = facebookURL;
         twitterLinkElement.href = twitterURL;
